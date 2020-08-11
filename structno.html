@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>StructNo</title>
+<!--
+    structno.html
+    2020-8-11 v1.00
+-->
+<style type="text/css">
+<!--
+.main_container {
+    background-color: #fffca8; /* 背景色 */
+    color: #000000;            /* 文字色 */
+}
+td { font-weight: bold; }
+-->
+</style>
+<script type="text/javascript">
+<!--
+// ****************************************
+//            ブラウザ関連処理等
+// ****************************************
+
+// ***** 汎用 *****
+function Alm(msg) {
+    // alert(msg);
+}
+function Alm2(msg) {
+    alert(msg);
+}
+function DebugShow(msg) {
+    document.getElementById("debug_show1").appendChild(document.createTextNode(msg));
+}
+function DebugShowClear() {
+    document.getElementById("debug_show1").innerHTML = "";
+}
+
+// ***** 変換ボタン *****
+function convert_button() {
+    var src_st;
+    var indent_size;
+    var separator_type;
+    var add_dquote;
+    var show_number;
+    var show_item;
+    var space_type;
+    var show_leaf;
+    var node_type;
+    var leaf_type;
+    var result = {};
+
+    // ***** デバッグ表示の初期化 *****
+    DebugShowClear();
+    // ***** 要素の存在チェック *****
+    if (!document.getElementById("src_text1"))         { Alm("convert_button:0001"); return false; }
+    if (!document.getElementById("indentsize_select")) { Alm("convert_button:0002"); return false; }
+    if (!document.getElementById("separator_select"))  { Alm("convert_button:0003"); return false; }
+    if (!document.getElementById("dquote_check"))      { Alm("convert_button:0004"); return false; }
+    if (!document.getElementById("number_check"))      { Alm("convert_button:0005"); return false; }
+    if (!document.getElementById("item_check"))        { Alm("convert_button:0006"); return false; }
+    if (!document.getElementById("space_select"))      { Alm("convert_button:0007"); return false; }
+    if (!document.getElementById("leaf_check"))        { Alm("convert_button:0008"); return false; }
+    if (!document.getElementById("node_select"))       { Alm("convert_button:0009"); return false; }
+    if (!document.getElementById("leaf_select"))       { Alm("convert_button:0010"); return false; }
+    if (!document.getElementById("out_text1"))         { Alm("convert_button:0011"); return false; }
+    if (!document.getElementById("result_show1"))      { Alm("convert_button:0012"); return false; }
+    // ***** ソースの取得 *****
+    src_st = document.getElementById("src_text1").value;
+    indent_size = document.getElementById("indentsize_select").selectedIndex + 1;
+    separator_type = document.getElementById("separator_select").selectedIndex;
+    add_dquote = document.getElementById("dquote_check").checked;
+    show_number = document.getElementById("number_check").checked;
+    show_item = document.getElementById("item_check").checked;
+    space_type = document.getElementById("space_select").selectedIndex;
+    show_leaf = document.getElementById("leaf_check").checked;
+    node_type = document.getElementById("node_select").selectedIndex;
+    leaf_type = document.getElementById("leaf_select").selectedIndex;
+    // ***** 変換実行 *****
+    result = StructNo.convert(src_st, indent_size, separator_type, add_dquote,
+                              show_number, show_item, space_type,
+                              show_leaf, node_type, leaf_type);
+    // ***** 出力の表示 *****
+    document.getElementById("out_text1").value = result.out;
+    document.getElementById("result_show1").innerHTML = result.html;
+    return true;
+}
+
+// ***** クリアボタン *****
+function clear_button() {
+    // ***** デバッグ表示の初期化 *****
+    DebugShowClear();
+    // ***** 要素の存在チェック *****
+    if (!document.getElementById("src_text1"))    { Alm("clear_button:0001"); return false; }
+    if (!document.getElementById("out_text1"))    { Alm("clear_button:0002"); return false; }
+    if (!document.getElementById("result_show1")) { Alm("clear_button:0003"); return false; }
+    // ***** ソースのクリア *****
+    document.getElementById("src_text1").value = "";
+    // ***** 出力のクリア *****
+    document.getElementById("out_text1").value = "";
+    document.getElementById("result_show1").innerHTML = "";
+    return true;
+}
+
+// ***** サンプルボタン *****
+function sample_button(sample_no) {
+    var src_st;
+
+    // ***** 要素の存在チェック *****
+    if (!document.getElementById("src_text1")) { Alm("sample_button:0001"); return false; }
+    // ***** ソースの設定 *****
+    src_st = "";
+    switch (sample_no) {
+        case 0:
+            src_st = "大分類１\n"
+                   + "  小分類１\n"
+                   + "    項目１\n"
+                   + "    項目２\n"
+                   + "大分類２\n"
+                   + "  小分類１\n"
+                   + "    項目１\n"
+                   + "    項目２\n";
+            break;
+        case 1:
+            src_st = "大分類１\n"
+                   + "  中分類１\n"
+                   + "    小分類１\n"
+                   + "      項目１\n"
+                   + "      項目２\n"
+                   + "    小分類２\n"
+                   + "      項目１\n"
+                   + "      項目２\n"
+                   + "  中分類２\n"
+                   + "    小分類１\n"
+                   + "      項目１\n"
+                   + "      項目２\n";
+            break;
+        case 2:
+            src_st = "機能試験\n"
+                   + "  起動／終了\n"
+                   + "    起動\n"
+                   + "    終了\n"
+                   + "  機能１\n"
+                   + "    項目１\n"
+                   + "    項目２\n"
+                   + "  機能２\n"
+                   + "    項目１\n"
+                   + "    項目２\n"
+                   + "エラー試験\n"
+                   + "  エラー１\n"
+                   + "    項目１\n"
+                   + "    項目２\n"
+                   + "負荷試験\n"
+                   + "  負荷１\n"
+                   + "    項目１\n"
+                   + "    項目２\n";
+            break;
+    }
+    document.getElementById("src_text1").value = src_st;
+    // ***** 変換ボタンを押したことにする *****
+    convert_button();
+    return true;
+}
+
+
+// ****************************************
+//        階層化された項目番号を生成
+// ****************************************
+
+// ***** StructNo(名前空間) *****
+//
+// 公開I/F :
+//
+//   StructNo.convert(src_st, indent_size, separator_type, add_dquote,
+//                    show_number, show_item, space_type,
+//                    show_leaf, node_type, leaf_type)  変換実行
+//     src_st          ソース(文字列)
+//     indent_size     インデントの空白数(=1-8)
+//     separator_type  区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
+//     add_dquote      ダブルクォート追加フラグ(boolean)
+//     show_number     項目番号表示フラグ(boolean)
+//     show_item       項目内容表示フラグ(boolean)
+//     space_type      空白タイプ(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
+//     show_leaf       葉の値表示フラグ(boolean)
+//     node_type       ノードの値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
+//     leaf_type       葉の値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
+//     戻り値          結果オブジェクト
+//                       result.out   テキスト出力(文字列)
+//                       result.html  HTML出力(文字列)
+//
+var StructNo;
+(function (StructNo) {
+    // ***** 定数 *****
+    var max_level = 100; // 項目番号のレベル(階層)の最大数
+
+    // ***** 変数 *****
+    var src_st;          // ソース(文字列)
+    var indent_size;     // インデントの空白数(=1-8)
+    var separator_type;  // 区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
+    var add_dquote;      // ダブルクォート追加フラグ(boolean)
+    var show_number;     // 項目番号表示フラグ(boolean)
+    var show_item;       // 項目内容表示フラグ(boolean)
+    var space_type;      // 空白タイプ(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
+    var show_leaf;       // 葉の値表示フラグ(boolean)
+    var node_type;       // ノードの値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
+    var leaf_type;       // 葉の値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
+    var out_st;          // テキスト出力(文字列)
+    var html_st;         // HTML出力(文字列)
+    var reg_newline  = /\r\n|\r|\n/;
+                         // 改行の正規表現(オブジェクト)
+    var reg_indent = /^(\s*)(\S.*)$/;
+                         // インデントの正規表現(オブジェクト)
+    var reg_empty = /^\s*$/;
+                         // 空行の正規表現(オブジェクト)
+
+    // ***** 公開I/F *****
+
+    // ***** 変換実行 *****
+    function convert(src_st1, indent_size1, separator_type1, add_dquote1,
+                     show_number1, show_item1, space_type1,
+                     show_leaf1, node_type1, leaf_type1) {
+        var i, j;
+        var result = {};      // 戻り値
+        var line_st = [];     // 行データ(文字列)(配列)
+        var line_out_st = []; // 行データ出力(文字列)(配列)
+        var number_list = []; // 項目番号のリスト(整数)(配列)
+        var number_st;        // 項目番号の文字列
+        var item_st;          // 項目内容の文字列
+        var leaf_st;          // 葉の値の文字列
+        var indent_num;       // インデント数
+        var indent_num_next;  // 次の行のインデント数
+
+        // ***** 戻り値の初期化 *****
+        result = {};
+        result.out = "";
+        result.html = "";
+
+        // ***** 引数のチェック *****
+        if (src_st1 == null)         { Alm("StructNo.convert:0001"); return result; }
+        if (indent_size1 == null)    { Alm("StructNo.convert:0002"); return result; }
+        if (separator_type1 == null) { Alm("StructNo.convert:0003"); return result; }
+        if (add_dquote1 == null)     { Alm("StructNo.convert:0004"); return result; }
+        if (show_number1 == null)    { Alm("StructNo.convert:0005"); return result; }
+        if (show_item1 == null)      { Alm("StructNo.convert:0006"); return result; }
+        if (space_type1 == null)     { Alm("StructNo.convert:0007"); return result; }
+        if (show_leaf1 == null)      { Alm("StructNo.convert:0008"); return result; }
+        if (node_type1 == null)      { Alm("StructNo.convert:0009"); return result; }
+        if (leaf_type1 == null)      { Alm("StructNo.convert:0010"); return result; }
+
+        // ***** ソースの取得 *****
+        src_st = src_st1;
+        line_st = src_st.split(reg_newline);
+
+        // ***** 各種パラメータの取得 *****
+        indent_size = indent_size1 | 0;
+        if (indent_size <= 0) { indent_size = 1; }
+        separator_type = separator_type1 | 0;
+        add_dquote = add_dquote1;
+        show_number = show_number1;
+        show_item = show_item1;
+        space_type = space_type1 | 0;
+        show_leaf = show_leaf1;
+        node_type = node_type1 | 0;
+        leaf_type = leaf_type1 | 0;
+
+        // ***** テキスト出力の生成 *****
+        line_out_st = [];
+        number_list = [];
+        for (i = 0; i < max_level; i++) { number_list[i] = 0; }
+        for (i = 0; i < line_st.length; i++) {
+            // ***** 空行のチェック *****
+            if (reg_empty.test(line_st[i])) {
+                line_out_st[i] = line_st[i];
+                continue;
+            }
+
+            // ***** インデント数の取得 *****
+            indent_num = get_indent_num(line_st[i]);
+
+            // ***** 項目内容の文字列を生成 *****
+            item_st = convert_leading_space(line_st[i], indent_num);
+
+            // ***** 項目番号の文字列を生成 *****
+            number_st = "";
+            if (indent_num >= 0 && indent_num < max_level) {
+                number_list[indent_num]++;
+                for (j = indent_num + 1; j < max_level; j++) {
+                    number_list[j] = 0;
+                }
+                for (j = 0; j <= indent_num; j++) {
+                    if (number_list[j] == 0) { number_list[j] = 1; }
+                    if (j > 0) { number_st += "."; }
+                    number_st += number_list[j];
+                }
+            }
+
+            // ***** 葉の値の文字列を生成 *****
+            leaf_st = "";
+            indent_num_next = -1;
+            for (j = i + 1; j < line_st.length; j++) {
+                if (reg_empty.test(line_st[j])) {
+                    continue;
+                }
+                indent_num_next = get_indent_num(line_st[j]);
+                if (indent_num_next >= 0 && indent_num_next < max_level) {
+                    break;
+                }
+            }
+            if (indent_num >= 0 && indent_num < max_level) {
+                if (indent_num < indent_num_next) {
+                    leaf_st = get_node_value();
+                } else {
+                    leaf_st = get_leaf_value();
+                }
+            }
+
+            // ***** 行データ出力の生成 *****
+            line_out_st[i] = "";
+            if (show_number) {
+                line_out_st[i] += add_dquote_sub(number_st);
+            }
+            if (show_item) {
+                if (show_number) {
+                    line_out_st[i] += get_separator();
+                }
+                line_out_st[i] += add_dquote_sub(item_st);
+            }
+            if (show_leaf) {
+                if (show_number || show_item) {
+                    line_out_st[i] += get_separator();
+                }
+                line_out_st[i] += add_dquote_sub(leaf_st);
+            }
+        }
+        out_st = line_out_st.join("\n");
+
+        // ***** HTML出力の生成 *****
+        for (i = 0; i < line_st.length; i++) {
+            // ***** 出力のサニタイズ(タグ無効化)処理 *****
+            line_out_st[i] = escape_html(line_out_st[i]);
+        }
+        html_st = line_out_st.join("\n");
+
+        // ***** 戻り値を返す *****
+        result.out = out_st;
+        result.html = html_st;
+        return result;
+    }
+    StructNo.convert = convert;
+
+    // ***** 公開I/Fはここまで *****
+
+    // ***** 以下は内部処理用 *****
+
+    // ***** インデント数の取得 *****
+    function get_indent_num(str) {
+        var reg_ret = reg_indent.exec(str);
+        if (reg_ret) {
+            return Math.floor(reg_ret[1].length / indent_size);
+        }
+        return -1;
+    }
+
+    // ***** 空白文字列の取得 *****
+    function get_space_string() {
+        switch (space_type) {
+            case 1:  return "x";    // 無変換
+            case 2:  return " ";    // 半角
+            case 3:  return "　";   // 全角
+            case 4:  return "  ";   // 半角x2
+            case 5:  return "　　"; // 全角x2
+            default: return "";     // 消去
+        }
+    }
+
+    // ***** 行頭の空白文字列の変換 *****
+    function convert_leading_space(str, indent_num) {
+        var space_st = get_space_string();
+        var reg_ret = reg_indent.exec(str);
+        if (reg_ret && space_st != "x") {
+            if (space_st == "") { return reg_ret[2]; } // 消去
+            return repeat_string(space_st, indent_num) + reg_ret[2]; // 変換
+        }
+        return str; // 無変換
+    }
+
+    // ***** 区切り記号の取得 *****
+    function get_separator() {
+        switch (separator_type) {
+            case 1:  return "\t";
+            case 2:  return " ";
+            default: return ",";
+        }
+    }
+
+    // ***** ダブルクォートの追加 *****
+    function add_dquote_sub(str) {
+        if (add_dquote) {
+            // ***** データ内のダブルクォートは2倍に増やす *****
+            return "\"" + str.replace(/"/g, "\"\"") + "\"";
+        }
+        return str;
+    }
+
+    // ***** ノードの値の取得 *****
+    function get_node_value() {
+        switch (node_type) {
+            case 1:  return "-";
+            case 2:  return "0";
+            case 3:  return "1";
+            case 4:  return "2";
+            default: return "";
+        }
+    }
+
+    // ***** 葉の値の取得 *****
+    function get_leaf_value() {
+        switch (leaf_type) {
+            case 1:  return "-";
+            case 2:  return "0";
+            case 3:  return "1";
+            case 4:  return "2";
+            default: return "";
+        }
+    }
+
+    // ***** HTML文字列のエスケープ処理 *****
+    function escape_html(html_st) {
+        return html_st
+            .replace(/&/g,   "&amp;")
+            .replace(/[<]/g, "&lt;")
+            .replace(/>/g,   "&gt;")
+            .replace(/"/g,   "&quot;")
+            .replace(/'/g,   "&#39;");
+    }
+
+    // ***** 文字列の繰り返し(最大10000回まで) *****
+    function repeat_string(str, n) {
+        var count = n | 0;
+        var add_st = str ? String(str) : "";
+        var result_st = "";
+        if (add_st.length == 0) { return result_st; }
+        if (!(count > 0 && count <= 10000)) { return result_st; }
+        while (true) {
+            if (count & 1) { result_st += add_st; }
+            count >>= 1;
+            if (count) { add_st += add_st; } else { break; }
+        }
+        return result_st;
+    }
+
+
+})(StructNo || (StructNo = {}));
+
+
+// -->
+</script>
+</head>
+
+<body class="main_container">
+
+<form action="#" onsubmit="convert_button(); return false;">
+<table style="width: 95%;"><tr>
+<td colspan="3" style="text-align: center;">Make Structural Numbers From Indented Text</td>
+</tr><tr>
+<td style="vertical-align: top;">src:</td>
+<td style="width: 95%;"><textarea id="src_text1" cols="40" rows="10" style="width: 100%;"></textarea></td>
+<td></td>
+</tr><tr>
+<td></td>
+<td><input type="submit" value="convert"> &nbsp;
+<input type="button" value="clear" onclick="clear_button();"><br>
+indent size : <select id="indentsize_select" style="margin-top: 10px;">
+<option value="0">1</option>
+<option value="1" selected>2</option>
+<option value="2">3</option>
+<option value="3">4</option>
+<option value="4">5</option>
+<option value="5">6</option>
+<option value="6">7</option>
+<option value="7">8</option>
+<option value="8">9</option>
+<option value="9">10</option>
+</select> &nbsp;
+separator : <select id="separator_select">
+<option value="0">comma</option>
+<option value="1">tab</option>
+<option value="2">space</option>
+</select> &nbsp;
+<input type="checkbox" id="dquote_check" checked><label for="dquote_check">double quote</label><br>
+<input type="checkbox" id="number_check" checked><label for="number_check">output number</label><br>
+<input type="checkbox" id="item_check" checked><label for="item_check">output item</label> &nbsp;
+( leading white space : <select id="space_select">
+<option value="0">remove</option>
+<option value="1">preserve</option>
+<option value="2">half width</option>
+<option value="3" selected>full width</option>
+<option value="4">half width x 2</option>
+<option value="5">full width x 2</option>
+</select> )<br>
+<input type="checkbox" id="leaf_check"><label for="leaf_check">output leaf</label> &nbsp;
+( value of node : <select id="node_select">
+<option value="0" selected>none</option>
+<option value="1">-</option>
+<option value="2">0</option>
+<option value="3">1</option>
+<option value="4">2</option>
+</select> &nbsp;
+value of leaf : <select id="leaf_select">
+<option value="0">none</option>
+<option value="1">-</option>
+<option value="2">0</option>
+<option value="3" selected>1</option>
+<option value="4">2</option>
+</select> )</td>
+<td></td>
+</tr><tr>
+<td style="vertical-align: top;">out:</td>
+<td style="width: 95%;"><textarea id="out_text1" cols="40" rows="10" style="width: 100%;"></textarea></td>
+<td></td>
+</tr><tr>
+<td></td>
+<td><input type="button" value="sample1" onclick="sample_button(0);">
+<input type="button" value="sample2" onclick="sample_button(1);">
+<input type="button" value="sample3" onclick="sample_button(2);"></td>
+<td></td>
+</tr></table>
+<pre><span id="debug_show1"></span></pre>
+<pre><span id="result_show1"></span></pre>
+</form>
+
+</body>
+</html>
