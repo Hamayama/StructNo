@@ -5,7 +5,7 @@
 <title>StructNo</title>
 <!--
     structno.html
-    2020-8-11 v1.00
+    2020-8-12 v1.01
 -->
 <style type="text/css">
 <!--
@@ -180,7 +180,7 @@ function sample_button(sample_no) {
 //     add_dquote      ダブルクォート追加フラグ(boolean)
 //     show_number     項目番号表示フラグ(boolean)
 //     show_item       項目内容表示フラグ(boolean)
-//     space_type      空白タイプ(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
+//     space_type      行頭の空白変換種別(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
 //     show_leaf       葉の値表示フラグ(boolean)
 //     node_type       ノードの値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
 //     leaf_type       葉の値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
@@ -200,7 +200,7 @@ var StructNo;
     var add_dquote;      // ダブルクォート追加フラグ(boolean)
     var show_number;     // 項目番号表示フラグ(boolean)
     var show_item;       // 項目内容表示フラグ(boolean)
-    var space_type;      // 空白タイプ(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
+    var space_type;      // 行頭の空白変換種別(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
     var show_leaf;       // 葉の値表示フラグ(boolean)
     var node_type;       // ノードの値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
     var leaf_type;       // 葉の値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
@@ -270,6 +270,7 @@ var StructNo;
         for (i = 0; i < line_st.length; i++) {
             // ***** 空行のチェック *****
             if (reg_empty.test(line_st[i])) {
+                // (空行はそのまま出力)
                 line_out_st[i] = line_st[i];
                 continue;
             }
@@ -283,10 +284,13 @@ var StructNo;
             // ***** 項目番号の文字列を生成 *****
             number_st = "";
             if (indent_num >= 0 && indent_num < max_level) {
+                // (現在のレベル(階層)の項目番号を増加)
                 number_list[indent_num]++;
+                // (現在のレベル(階層)より後の項目番号はリセット)
                 for (j = indent_num + 1; j < max_level; j++) {
                     number_list[j] = 0;
                 }
+                // (項目番号の文字列を生成)
                 for (j = 0; j <= indent_num; j++) {
                     if (number_list[j] == 0) { number_list[j] = 1; }
                     if (j > 0) { number_st += "."; }
@@ -297,6 +301,7 @@ var StructNo;
             // ***** 葉の値の文字列を生成 *****
             leaf_st = "";
             indent_num_next = -1;
+            // (次の行のインデント数を取得する)
             for (j = i + 1; j < line_st.length; j++) {
                 if (reg_empty.test(line_st[j])) {
                     continue;
@@ -306,6 +311,7 @@ var StructNo;
                     break;
                 }
             }
+            // (葉の値の文字列を生成)
             if (indent_num >= 0 && indent_num < max_level) {
                 if (indent_num < indent_num_next) {
                     leaf_st = get_node_value();
@@ -316,15 +322,18 @@ var StructNo;
 
             // ***** 行データ出力の生成 *****
             line_out_st[i] = "";
+            // (項目番号を出力)
             if (show_number) {
                 line_out_st[i] += add_dquote_sub(number_st);
             }
+            // (項目内容を出力)
             if (show_item) {
                 if (show_number) {
                     line_out_st[i] += get_separator();
                 }
                 line_out_st[i] += add_dquote_sub(item_st);
             }
+            // (葉の値を出力)
             if (show_leaf) {
                 if (show_number || show_item) {
                     line_out_st[i] += get_separator();
@@ -356,8 +365,10 @@ var StructNo;
     function get_indent_num(str) {
         var reg_ret = reg_indent.exec(str);
         if (reg_ret) {
+            // (インデント数の計算)
             return Math.floor(reg_ret[1].length / indent_size);
         }
+        // (空行等のとき)
         return -1;
     }
 
@@ -396,9 +407,10 @@ var StructNo;
     // ***** ダブルクォートの追加 *****
     function add_dquote_sub(str) {
         if (add_dquote) {
-            // ***** データ内のダブルクォートは2倍に増やす *****
+            // (データ内のダブルクォートは2倍に増やす)
             return "\"" + str.replace(/"/g, "\"\"") + "\"";
         }
+        // (ダブルクォート追加なしのとき)
         return str;
     }
 
@@ -437,14 +449,15 @@ var StructNo;
     // ***** 文字列の繰り返し(最大10000回まで) *****
     function repeat_string(str, n) {
         var count = n | 0;
-        var add_st = str ? String(str) : "";
+        var add_st = String(str);
         var result_st = "";
-        if (add_st.length == 0) { return result_st; }
+        if (str == null)                    { return result_st; }
+        if (add_st.length == 0)             { return result_st; }
         if (!(count > 0 && count <= 10000)) { return result_st; }
         while (true) {
             if (count & 1) { result_st += add_st; }
             count >>= 1;
-            if (count) { add_st += add_st; } else { break; }
+            if (count > 0) { add_st += add_st; } else { break; }
         }
         return result_st;
     }
