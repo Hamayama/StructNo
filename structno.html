@@ -5,7 +5,7 @@
 <title>StructNo</title>
 <!--
     structno.html
-    2020-8-12 v1.01
+    2020-8-22 v1.02
 -->
 <style type="text/css">
 <!--
@@ -41,7 +41,7 @@ function convert_button() {
     var src_st;
     var indent_size;
     var separator_type;
-    var add_dquote;
+    var quote_type;
     var show_number;
     var show_item;
     var space_type;
@@ -56,7 +56,7 @@ function convert_button() {
     if (!document.getElementById("src_text1"))         { Alm("convert_button:0001"); return false; }
     if (!document.getElementById("indentsize_select")) { Alm("convert_button:0002"); return false; }
     if (!document.getElementById("separator_select"))  { Alm("convert_button:0003"); return false; }
-    if (!document.getElementById("dquote_check"))      { Alm("convert_button:0004"); return false; }
+    if (!document.getElementById("quote_select"))      { Alm("convert_button:0004"); return false; }
     if (!document.getElementById("number_check"))      { Alm("convert_button:0005"); return false; }
     if (!document.getElementById("item_check"))        { Alm("convert_button:0006"); return false; }
     if (!document.getElementById("space_select"))      { Alm("convert_button:0007"); return false; }
@@ -69,7 +69,7 @@ function convert_button() {
     src_st = document.getElementById("src_text1").value;
     indent_size = document.getElementById("indentsize_select").selectedIndex + 1;
     separator_type = document.getElementById("separator_select").selectedIndex;
-    add_dquote = document.getElementById("dquote_check").checked;
+    quote_type = document.getElementById("quote_select").selectedIndex;
     show_number = document.getElementById("number_check").checked;
     show_item = document.getElementById("item_check").checked;
     space_type = document.getElementById("space_select").selectedIndex;
@@ -77,7 +77,7 @@ function convert_button() {
     node_type = document.getElementById("node_select").selectedIndex;
     leaf_type = document.getElementById("leaf_select").selectedIndex;
     // ***** 変換実行 *****
-    result = StructNo.convert(src_st, indent_size, separator_type, add_dquote,
+    result = StructNo.convert(src_st, indent_size, separator_type, quote_type,
                               show_number, show_item, space_type,
                               show_leaf, node_type, leaf_type);
     // ***** 出力の表示 *****
@@ -171,13 +171,13 @@ function sample_button(sample_no) {
 //
 // 公開I/F :
 //
-//   StructNo.convert(src_st, indent_size, separator_type, add_dquote,
+//   StructNo.convert(src_st, indent_size, separator_type, quote_type,
 //                    show_number, show_item, space_type,
 //                    show_leaf, node_type, leaf_type)  変換実行
 //     src_st          ソース(文字列)
-//     indent_size     インデントの空白数(=1-8)
+//     indent_size     インデントの空白数(=1-10)
 //     separator_type  区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
-//     add_dquote      ダブルクォート追加フラグ(boolean)
+//     quote_type      クォート種別(=0:なし,=1:シングル,=2:ダブル)
 //     show_number     項目番号表示フラグ(boolean)
 //     show_item       項目内容表示フラグ(boolean)
 //     space_type      行頭の空白変換種別(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
@@ -195,9 +195,9 @@ var StructNo;
 
     // ***** 変数 *****
     var src_st;          // ソース(文字列)
-    var indent_size;     // インデントの空白数(=1-8)
+    var indent_size;     // インデントの空白数(=1-10)
     var separator_type;  // 区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
-    var add_dquote;      // ダブルクォート追加フラグ(boolean)
+    var quote_type;      // クォート種別(=0:なし,=1:シングル,=2:ダブル)
     var show_number;     // 項目番号表示フラグ(boolean)
     var show_item;       // 項目内容表示フラグ(boolean)
     var space_type;      // 行頭の空白変換種別(=0:削除,=1:無変換,=2:半角,=3:全角,=4:半角x2,=5:全角x2)
@@ -216,7 +216,7 @@ var StructNo;
     // ***** 公開I/F *****
 
     // ***** 変換実行 *****
-    function convert(src_st1, indent_size1, separator_type1, add_dquote1,
+    function convert(src_st1, indent_size1, separator_type1, quote_type1,
                      show_number1, show_item1, space_type1,
                      show_leaf1, node_type1, leaf_type1) {
         var i, j;
@@ -239,7 +239,7 @@ var StructNo;
         if (src_st1 == null)         { Alm("StructNo.convert:0001"); return result; }
         if (indent_size1 == null)    { Alm("StructNo.convert:0002"); return result; }
         if (separator_type1 == null) { Alm("StructNo.convert:0003"); return result; }
-        if (add_dquote1 == null)     { Alm("StructNo.convert:0004"); return result; }
+        if (quote_type1 == null)     { Alm("StructNo.convert:0004"); return result; }
         if (show_number1 == null)    { Alm("StructNo.convert:0005"); return result; }
         if (show_item1 == null)      { Alm("StructNo.convert:0006"); return result; }
         if (space_type1 == null)     { Alm("StructNo.convert:0007"); return result; }
@@ -255,7 +255,7 @@ var StructNo;
         indent_size = indent_size1 | 0;
         if (indent_size <= 0) { indent_size = 1; }
         separator_type = separator_type1 | 0;
-        add_dquote = add_dquote1;
+        quote_type = quote_type1 | 0;
         show_number = show_number1;
         show_item = show_item1;
         space_type = space_type1 | 0;
@@ -324,21 +324,21 @@ var StructNo;
             line_out_st[i] = "";
             // (項目番号を出力)
             if (show_number) {
-                line_out_st[i] += add_dquote_sub(number_st);
+                line_out_st[i] += add_quote(number_st);
             }
             // (項目内容を出力)
             if (show_item) {
                 if (show_number) {
                     line_out_st[i] += get_separator();
                 }
-                line_out_st[i] += add_dquote_sub(item_st);
+                line_out_st[i] += add_quote(item_st);
             }
             // (葉の値を出力)
             if (show_leaf) {
                 if (show_number || show_item) {
                     line_out_st[i] += get_separator();
                 }
-                line_out_st[i] += add_dquote_sub(leaf_st);
+                line_out_st[i] += add_quote(leaf_st);
             }
         }
         out_st = line_out_st.join("\n");
@@ -404,14 +404,21 @@ var StructNo;
         }
     }
 
-    // ***** ダブルクォートの追加 *****
-    function add_dquote_sub(str) {
-        if (add_dquote) {
-            // (データ内のダブルクォートは2倍に増やす)
-            return "\"" + str.replace(/"/g, "\"\"") + "\"";
+    // ***** クォートの追加 *****
+    function add_quote(str) {
+        switch (quote_type) {
+            case 1:
+                // シングルクォート追加
+                // (データ内のシングルクォートは2倍に増やす)
+                return "'" + str.replace(/'/g, "''") + "'";
+            case 2:
+                // ダブルクォート追加
+                // (データ内のダブルクォートは2倍に増やす)
+                return "\"" + str.replace(/"/g, "\"\"") + "\"";
+            default:
+                // クォート追加なし
+                return str;
         }
-        // (ダブルクォート追加なしのとき)
-        return str;
     }
 
     // ***** ノードの値の取得 *****
@@ -500,7 +507,11 @@ separator : <select id="separator_select">
 <option value="1">tab</option>
 <option value="2">space</option>
 </select> &nbsp;
-<input type="checkbox" id="dquote_check" checked><label for="dquote_check">double quote</label><br>
+quote : <select id="quote_select">
+<option value="0">none</option>
+<option value="1">single</option>
+<option value="2" selected>double</option>
+</select><br>
 <input type="checkbox" id="number_check" checked><label for="number_check">output number</label><br>
 <input type="checkbox" id="item_check" checked><label for="item_check">output item</label> &nbsp;
 ( leading white space : <select id="space_select">
