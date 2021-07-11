@@ -5,7 +5,7 @@
 <title>StructNo</title>
 <!--
     structno.html
-    2021-7-10 v1.04
+    2021-7-11 v1.05
 -->
 <style type="text/css">
 <!--
@@ -42,6 +42,7 @@ function convert_button() {
     var indent_size;
     var separator_type;
     var quote_type;
+    var lastdot_type;
     var show_number;
     var init_numbers;
     var show_item;
@@ -58,20 +59,22 @@ function convert_button() {
     if (!document.getElementById("indentsize_select")) { Alm("convert_button:0002"); return false; }
     if (!document.getElementById("separator_select"))  { Alm("convert_button:0003"); return false; }
     if (!document.getElementById("quote_select"))      { Alm("convert_button:0004"); return false; }
-    if (!document.getElementById("number_check"))      { Alm("convert_button:0005"); return false; }
-    if (!document.getElementById("item_check"))        { Alm("convert_button:0006"); return false; }
-    if (!document.getElementById("init_numbers"))      { Alm("convert_button:0007"); return false; }
-    if (!document.getElementById("space_select"))      { Alm("convert_button:0008"); return false; }
-    if (!document.getElementById("leaf_check"))        { Alm("convert_button:0009"); return false; }
-    if (!document.getElementById("node_select"))       { Alm("convert_button:0010"); return false; }
-    if (!document.getElementById("leaf_select"))       { Alm("convert_button:0011"); return false; }
-    if (!document.getElementById("out_text1"))         { Alm("convert_button:0012"); return false; }
-    if (!document.getElementById("result_show1"))      { Alm("convert_button:0013"); return false; }
+    if (!document.getElementById("lastdot_select"))    { Alm("convert_button:0005"); return false; }
+    if (!document.getElementById("number_check"))      { Alm("convert_button:0006"); return false; }
+    if (!document.getElementById("item_check"))        { Alm("convert_button:0007"); return false; }
+    if (!document.getElementById("init_numbers"))      { Alm("convert_button:0008"); return false; }
+    if (!document.getElementById("space_select"))      { Alm("convert_button:0009"); return false; }
+    if (!document.getElementById("leaf_check"))        { Alm("convert_button:0010"); return false; }
+    if (!document.getElementById("node_select"))       { Alm("convert_button:0011"); return false; }
+    if (!document.getElementById("leaf_select"))       { Alm("convert_button:0012"); return false; }
+    if (!document.getElementById("out_text1"))         { Alm("convert_button:0013"); return false; }
+    if (!document.getElementById("result_show1"))      { Alm("convert_button:0014"); return false; }
     // ***** ソースの取得 *****
     src_st =         document.getElementById("src_text1").value;
     indent_size =    document.getElementById("indentsize_select").selectedIndex + 1;
     separator_type = document.getElementById("separator_select").selectedIndex;
     quote_type =     document.getElementById("quote_select").selectedIndex;
+    lastdot_type =   document.getElementById("lastdot_select").selectedIndex;
     show_number =    document.getElementById("number_check").checked;
     init_numbers =   document.getElementById("init_numbers").value;
     show_item =      document.getElementById("item_check").checked;
@@ -80,7 +83,8 @@ function convert_button() {
     node_type =      document.getElementById("node_select").selectedIndex;
     leaf_type =      document.getElementById("leaf_select").selectedIndex;
     // ***** 変換実行 *****
-    result = StructNo.convert(src_st, indent_size, separator_type, quote_type,
+    result = StructNo.convert(src_st,
+                              indent_size, separator_type, quote_type, lastdot_type,
                               show_number, init_numbers, show_item, space_type,
                               show_leaf, node_type, leaf_type);
     // ***** 出力の表示 *****
@@ -174,13 +178,15 @@ function sample_button(sample_no) {
 //
 // 公開I/F :
 //
-//   StructNo.convert(src_st, indent_size, separator_type, quote_type,
+//   StructNo.convert(src_st,
+//                    indent_size, separator_type, quote_type, lastdot_type,
 //                    show_number, init_numbers, show_item, space_type,
 //                    show_leaf, node_type, leaf_type)  変換実行
 //     src_st          ソース(文字列)
 //     indent_size     インデントの空白数(=1-10)
 //     separator_type  区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
 //     quote_type      クォート種別(=0:なし,=1:シングル,=2:ダブル)
+//     lastdot_type    最終ドット種別(=0:なし,=1:あり,=2:第1階層のみあり)
 //     show_number     項目番号表示フラグ(boolean)
 //     init_numbers    初期番号設定(文字列)("1.2.3" 等)
 //     show_item       項目内容表示フラグ(boolean)
@@ -202,6 +208,7 @@ var StructNo;
     var indent_size;     // インデントの空白数(=1-10)
     var separator_type;  // 区切り記号種別(=0:カンマ,=1:タブ,=2:空白(半角))
     var quote_type;      // クォート種別(=0:なし,=1:シングル,=2:ダブル)
+    var lastdot_type;    // 最終ドット種別(=0:なし,=1:あり,=2:第1階層のみあり)
     var show_number;     // 項目番号表示フラグ(boolean)
     var init_numbers;    // 初期番号設定(文字列)("1.2.3" 等)
     var show_item;       // 項目内容表示フラグ(boolean)
@@ -221,7 +228,8 @@ var StructNo;
     // ***** 公開I/F *****
 
     // ***** 変換実行 *****
-    function convert(src_st1, indent_size1, separator_type1, quote_type1,
+    function convert(src_st1,
+                     indent_size1, separator_type1, quote_type1, lastdot_type1,
                      show_number1, init_numbers1, show_item1, space_type1,
                      show_leaf1, node_type1, leaf_type1) {
         var i, j;
@@ -247,13 +255,14 @@ var StructNo;
         if (indent_size1 == null)    { Alm("StructNo.convert:0002"); return result; }
         if (separator_type1 == null) { Alm("StructNo.convert:0003"); return result; }
         if (quote_type1 == null)     { Alm("StructNo.convert:0004"); return result; }
-        if (show_number1 == null)    { Alm("StructNo.convert:0005"); return result; }
-        if (init_numbers1 == null)   { Alm("StructNo.convert:0006"); return result; }
-        if (show_item1 == null)      { Alm("StructNo.convert:0007"); return result; }
-        if (space_type1 == null)     { Alm("StructNo.convert:0008"); return result; }
-        if (show_leaf1 == null)      { Alm("StructNo.convert:0009"); return result; }
-        if (node_type1 == null)      { Alm("StructNo.convert:0010"); return result; }
-        if (leaf_type1 == null)      { Alm("StructNo.convert:0011"); return result; }
+        if (lastdot_type1 == null)   { Alm("StructNo.convert:0005"); return result; }
+        if (show_number1 == null)    { Alm("StructNo.convert:0006"); return result; }
+        if (init_numbers1 == null)   { Alm("StructNo.convert:0007"); return result; }
+        if (show_item1 == null)      { Alm("StructNo.convert:0008"); return result; }
+        if (space_type1 == null)     { Alm("StructNo.convert:0009"); return result; }
+        if (show_leaf1 == null)      { Alm("StructNo.convert:0010"); return result; }
+        if (node_type1 == null)      { Alm("StructNo.convert:0011"); return result; }
+        if (leaf_type1 == null)      { Alm("StructNo.convert:0012"); return result; }
 
         // ***** ソースの取得 *****
         src_st = src_st1;
@@ -264,6 +273,7 @@ var StructNo;
         if (indent_size <= 0) { indent_size = 1; }
         separator_type = separator_type1 | 0;
         quote_type     = quote_type1 | 0;
+        lastdot_type   = lastdot_type1 | 0;
         show_number    = show_number1;
         init_numbers   = init_numbers1;
         show_item      = show_item1;
@@ -321,6 +331,8 @@ var StructNo;
                     // (初期設定フラグOFF)
                     init_number_flag[j] = false;
                 }
+                // (最終ドットの追加)
+                number_st = add_lastdot(number_st);
             }
 
             // ***** 葉の値の文字列を生成 *****
@@ -446,6 +458,15 @@ var StructNo;
         }
     }
 
+    // ***** 最終ドットの追加 *****
+    function add_lastdot(str) {
+        switch (lastdot_type) {
+            case 1:  return str + ".";
+            case 2:  return str + (str.indexOf(".") < 0 ? "." : "");
+            default: return str;
+        }
+    }
+
     // ***** ノードの値の取得 *****
     function get_node_value() {
         switch (node_type) {
@@ -527,7 +548,7 @@ indent size : <select id="indentsize_select" style="margin-top: 10px;">
 <option value="8">9</option>
 <option value="9">10</option>
 </select> &nbsp;
-separator : <select id="separator_select">
+sep : <select id="separator_select">
 <option value="0">comma</option>
 <option value="1">tab</option>
 <option value="2">space</option>
@@ -536,6 +557,11 @@ quote : <select id="quote_select">
 <option value="0">none</option>
 <option value="1">single</option>
 <option value="2" selected>double</option>
+</select> &nbsp;
+last dot : <select id="lastdot_select">
+<option value="0">none</option>
+<option value="1">add</option>
+<option value="2">first only</option>
 </select><br>
 <input type="checkbox" id="number_check" checked><label for="number_check">output number</label> &nbsp;
 ( initial number (e.g. 3.4.5) : <input type="text" id="init_numbers" value="" style="width: 100px;"> )<br>
