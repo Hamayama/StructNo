@@ -5,7 +5,7 @@
 <title>StructNo</title>
 <!--
     structno.html
-    2021-7-11 v1.06
+    2021-7-15 v1.07
 -->
 <style type="text/css">
 <!--
@@ -202,6 +202,8 @@ var StructNo;
 (function (StructNo) {
     // ***** 定数 *****
     var max_level = 100; // 項目番号のレベル(階層)の最大数
+    var init_number = 1; // 項目番号の初期値
+    var addi_number = 1; // 項目番号の加算値
 
     // ***** 変数 *****
     var src_st;          // ソース(文字列)
@@ -218,11 +220,11 @@ var StructNo;
     var leaf_type;       // 葉の値(=0:なし,=1:'-',=2:'0',=3:'1',=4:'2')
     var out_st;          // テキスト出力(文字列)
     var html_st;         // HTML出力(文字列)
-    var reg_newline  = /\r\n|\r|\n/;
+    var reg_newline = /\r\n|\r|\n/;
                          // 改行の正規表現(オブジェクト)
-    var reg_indent = /^(\s*)(\S.*)$/;
+    var reg_indent  = /^(\s*)(\S.*)$/;
                          // インデントの正規表現(オブジェクト)
-    var reg_empty = /^\s*$/;
+    var reg_empty   = /^\s*$/;
                          // 空行の正規表現(オブジェクト)
 
     // ***** 公開I/F *****
@@ -237,7 +239,7 @@ var StructNo;
         var line_st = [];          // 行データ(文字列)(配列)
         var line_out_st = [];      // 行データ出力(文字列)(配列)
         var init_number_list = []; // 項目番号のリストの初期値(文字列)(配列)
-        var init_number_flag = []; // 項目番号のリストの初期値有無(boolean)(配列)
+        var init_number_flag = []; // 項目番号のリストの初期値有効フラグ(boolean)(配列)
         var number_list = [];      // 項目番号のリスト(整数)(配列)
         var number_st;             // 項目番号の文字列
         var item_st;               // 項目内容の文字列
@@ -290,11 +292,11 @@ var StructNo;
             // (初期値の指定があればセットする)
             if (i < init_number_list.length) {
                 number_list[i] = init_number_list[i] | 0;
+                if (number_list[i] <= 0) { number_list[i] = init_number; }
             } else {
-                number_list[i] = 0;
+                number_list[i] = init_number;
             }
-            if (number_list[i] < 0) { number_list[i] = 0; }
-            init_number_flag[i] = (number_list[i] > 0);
+            init_number_flag[i] = true;
         }
         for (i = 0; i < line_st.length; i++) {
             // ***** 空行のチェック *****
@@ -315,20 +317,20 @@ var StructNo;
             if (indent_num >= 0) {
                 // (現在のレベル(階層)の項目番号を増加)
                 if (!init_number_flag[indent_num]) {
-                    number_list[indent_num]++;
+                    number_list[indent_num] += addi_number;
                 }
                 // (現在のレベル(階層)より後の項目番号はリセット)
                 for (j = indent_num + 1; j < max_level; j++) {
                     if (!init_number_flag[j]) {
-                        number_list[j] = 0;
+                        number_list[j] = init_number;
+                        init_number_flag[j] = true;
                     }
                 }
                 // (項目番号の文字列を生成)
                 for (j = 0; j <= indent_num; j++) {
-                    if (number_list[j] == 0) { number_list[j] = 1; }
                     if (j > 0) { number_st += "."; }
                     number_st += number_list[j];
-                    // (初期設定フラグOFF)
+                    // (初期値有効フラグOFF)
                     init_number_flag[j] = false;
                 }
                 // (最終ドットの追加)
